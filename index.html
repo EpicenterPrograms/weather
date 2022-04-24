@@ -4,14 +4,162 @@
 		<title>
 			Weather
 		</title>
+		<link rel="icon" href="http://openweathermap.org/img/wn/02d.png">
 		<base target="_blank">
 		<script src="https://epicenterprograms.github.io/standards/behavior/general.js"></script>
 		<script>
-			
+			var S = Standards.general;
+
+			var cncs = [-Infinity, 1.4, 2.5, 3.7, 4.5, 5.3, 6.2, 7.9, Infinity];  // clothing number cutoffs
+
+			function getLocation(method) {
+				return new Promise(function (resolve, reject) {
+					if (method == "currentLocation") {
+						navigator.geolocation.getCurrentPosition(
+							function (location) {  // if successful
+								resolve([location.coords.latitude, location.coords.longitude]);
+							}, function (reason) {  // if unsuccessful
+								switch (reason.code) {
+									case 1:
+										S.makeDialog("This website wasn't given permission to access your location.");
+										console.error("Current location permission was denied.");
+										break;
+									case 2:
+										S.makeDialog("Your location couldn't be found.");
+										console.error("The current location couldn't be determined.");
+										break;
+									case 3:
+										S.makeDialog("The request to find your location timed out.");
+										console.error("The current location couldn't be found fast enough.");
+										break;
+								}
+								reject(reason.message);
+							});
+					} else if (method == "specifiedLocation") {
+						//// not currently supported
+						reject("Setting a specified location isn't supported yet.");
+					} else {
+						S.makeDialog("The location couldn't be retrieved.");
+						reject("A proper method wasn't specified for location retrieval.");
+					}
+				});
+			}
+
+			function getWeather(location) {
+				S.getFile("https://api.openweathermap.org/data/2.5/onecall?lat=" + location[0] + "&lon=" + location[1] + "&appid=ad62770bf2ffc935b5afbf5ce478191a&units=imperial", function (weather) {
+					if (S.getType(weather) == "String") {
+						weather = JSON.parse(weather);
+					}
+					console.log(weather);
+					if (weather.cod == "429") {
+						S.makeDialog("The developer's weather request quota has been reached.");
+					} else {
+						S.getId("currentWeatherIcon").src = "http://openweathermap.org/img/wn/" + weather.current.weather[0].icon + "@2x" + ".png";
+                        let cn = getClothingNumber(weather.current.temp, weather.current.wind_speed, weather.current.humidity, weather.current.clouds)
+						S.getId("clothingNumber").textContent = cn.toFixed(1);
+						S.getId("clothingDescription").textContent = getClothingDescription(cn);
+						let cnci = getCNCI(cn);
+						S.getId("lowCutoff").textContent = cncs[cnci - 1];
+						S.getId("highCutoff").textContent = cncs[cnci];
+
+						S.forEach(weather.daily, showDailyWeather);
+                    }
+				})/*.catch(function (error) {
+					S.makeDialog("There was an error retrieving the weather.");
+					console.error("The weather couldn't be retrieved.");
+					console.error(error);
+				})*/;
+			}
+
+			function getClothingNumber(temperature, wind, humidity, clouds) {
+				return Math.round(((temperature * 7.5 - wind * 2 + 1.047 ** humidity - 2.4 ** (clouds / 100 * 3)) / 60.375 - 3.07) * 10) / 10;
+			}
+
+			function getClothingDescription(cn) {
+				if (cn <= cncs[1]) {
+					return "Super warm clothing";
+				} else if (cn <= cncs[2]) {
+					return "Coat and a thick shirt";
+				} else if (cn <= cncs[3]) {
+					return "Jacket and a thick shirt";
+				} else if (cn <= cncs[4]) {
+					return "Thick shirt";
+				} else if (cn <= cncs[5]) {
+					return "Long-sleeve shirt";
+				} else if (cn <= cncs[6]) {
+					return "Short-sleeve shirt";
+				} else if (cn <= cncs[7]) {
+					return "Shorts";
+				} else {
+					return "Super cool clothing";
+                }
+			}
+
+            function getCNCI(cn) {  // get clothing number cutoff index
+				for (let index = 1; cn > cncs[index - 1]; index++) {
+					if (cn <= cncs[index]) {
+						return index;
+					}
+				}
+			}
+
+			function showDailyWeather(day) {
+				let dayBox = document.createElement("div");
+				dayBox.className = "day-box";
+				let dayName = document.createElement("h3");
+				dayName.className = "day-name";
+				dayName.textContent = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date(day.dt * 1000).getDay()];
+				dayBox.appendChild(dayName);
+				let dayIcon = document.createElement("img");
+				dayIcon.src = "http://openweathermap.org/img/wn/" + day.weather[0].icon + ".png";
+				dayBox.appendChild(dayIcon);
+				dayBox.appendChild(document.createElement("br"));
+				let cn = getClothingNumber(day.temp.day, day.wind_speed, day.humidity, day.clouds);
+				let lowCutoff = document.createElement("span");
+				lowCutoff.className = "day-cutoff";
+				lowCutoff.textContent = cncs[getCNCI(cn) - 1];
+				dayBox.appendChild(lowCutoff);
+				let number = document.createElement("span");
+				number.className = "clothing-number";
+				number.textContent = cn.toFixed(1);
+				dayBox.appendChild(number);
+				let highCutoff = document.createElement("span");
+				highCutoff.className = "day-cutoff";
+				highCutoff.textContent = cncs[getCNCI(cn)];
+				dayBox.appendChild(highCutoff);
+				let description = document.createElement("section");
+				description.textContent = getClothingDescription(cn);
+				dayBox.appendChild(description);
+				S.getId("dailyWeather").appendChild(dayBox);
+            }
+
+			S.listen("getLocationAndWeather", "click", function () {
+                getLocation("currentLocation").then(getWeather).catch(function (error) {
+					console.error(error);
+				});
+			});
 		</script>
 		<link rel="stylesheet" href="https://epicenterprograms.github.io/standards/formatting/foundation.css">
 		<style>
-			
+			.day-box {
+				margin: .5em;
+				padding: .5em;
+				background: white;
+			}
+			.day-box section {
+				margin-top: .5em;
+				margin-bottom: .5em;
+			}
+			.day-box .day-name {
+				margin-top: .5em;
+				margin-bottom: .5em;
+			}
+			.day-box .clothing-number {
+				margin-left: .5em;
+				margin-right: .5em;
+				font-size: 1.2em;
+				font-weight: bold;
+			}
 		</style>
 	</head>
 	<body>
@@ -19,9 +167,31 @@
 			Weather
 		</h1>
 		<main>
-			<section>
-				This will tell the weather and advise you on what to wear.
-			</section>
+			<div id="locationSpecification">
+				<section>
+					Press the button to get the weather at your current location and get advice on what to wear.
+				</section>
+				<button id="getLocationAndWeather">
+					The button
+				</button>
+			</div>
+			<br>
+			<div id="currentWeather">
+				<h2>
+					Current weather
+				</h2>
+				<img id="currentWeatherIcon">
+				<h3 id="clothingNumber"></h3>
+				<section>
+					<span id="lowCutoff"></span> <span id="clothingDescription"></span> <span id="highCutoff"></span>
+				</section>
+			</div>
+			<br>
+			<div id="dailyWeather">
+				<h2>
+					Daily weather
+				</h2>
+			</div>
 		</main>
 	</body>
 </html>
