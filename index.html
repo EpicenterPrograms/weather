@@ -111,7 +111,7 @@
 				dayName.textContent = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date(day.dt * 1000).getDay()];
 				dayBox.appendChild(dayName);
 				let dayIcon = document.createElement("img");
-				dayIcon.src = "http://openweathermap.org/img/wn/" + day.weather[0].icon + ".png";
+				dayIcon.src = "http://openweathermap.org/img/wn/" + day.weather[0].icon + "@2x.png";
 				dayBox.appendChild(dayIcon);
 				dayBox.appendChild(document.createElement("br"));
 				let cn = getClothingNumber(day.temp.day, day.wind_speed, day.humidity, day.clouds);
@@ -160,6 +160,11 @@
 				font-size: 1.2em;
 				font-weight: bold;
 			}
+
+            @media (prefers-color-scheme: dark) {
+				.day-box {
+					background: black;
+				}
 		</style>
 	</head>
 	<body>
