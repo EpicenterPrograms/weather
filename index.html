@@ -11,6 +11,7 @@
 			var S = Standards.general;
 
 			var cncs = [-Infinity, 1.4, 2.5, 3.7, 4.5, 5.3, 6.2, 7.9, Infinity];  // clothing number cutoffs
+            var appID = "ad62770bf2ffc9" + 5 * 7 + "b5afbf5ce478";
 
 			function getLocation(method) {
 				return new Promise(function (resolve, reject) {
@@ -46,14 +47,17 @@
 			}
 
 			function getWeather(location) {
-				S.getFile("https://api.openweathermap.org/data/2.5/onecall?lat=" + location[0] + "&lon=" + location[1] + "&appid=ad62770bf2ffc935b5afbf5ce478191a&units=imperial", function (weather) {
+				S.getFile("https://api.openweathermap.org/data/2.5/onecall?lat=" + location[0] + "&lon=" + location[1] + "&appid=" + appID + "191a&units=imperial", function (weather) {
 					if (S.getType(weather) == "String") {
 						weather = JSON.parse(weather);
 					}
-					console.log(weather);
+					//// console.log(weather);
 					if (weather.cod == "429") {
 						S.makeDialog("The developer's weather request quota has been reached.");
 					} else {
+						S.getId("weatherLatitude").textContent = weather.lat;
+						S.getId("weatherLongitude").textContent = weather.lon;
+
 						S.getId("currentWeatherIcon").src = "http://openweathermap.org/img/wn/" + weather.current.weather[0].icon + "@2x" + ".png";
                         let cn = getClothingNumber(weather.current.temp, weather.current.wind_speed, weather.current.humidity, weather.current.clouds)
 						S.getId("clothingNumber").textContent = cn.toFixed(1);
@@ -62,7 +66,12 @@
 						S.getId("lowCutoff").textContent = cncs[cnci - 1];
 						S.getId("highCutoff").textContent = cncs[cnci];
 
+						S.getId("dailyWeather").innerHTML = "<h2>Daily weather</h2>";
 						S.forEach(weather.daily, showDailyWeather);
+
+                        S.getId("location").style.display = "inline-block";
+                        S.getId("currentWeather").style.display = "inline-block";
+                        S.getId("dailyWeather").style.display = "inline-block";
                     }
 				})/*.catch(function (error) {
 					S.makeDialog("There was an error retrieving the weather.");
@@ -105,7 +114,7 @@
 
 			function showDailyWeather(day) {
 				let dayBox = document.createElement("div");
-				dayBox.className = "day-box";
+				dayBox.className = "day-box generic-background";
 				let dayName = document.createElement("h3");
 				dayName.className = "day-name";
 				dayName.textContent = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date(day.dt * 1000).getDay()];
@@ -138,13 +147,15 @@
 					console.error(error);
 				});
 			});
+			S.listen("getWeatherAtLocation", "click", function () {
+				getWeather([S.getId("latitude").value, S.getId("longitude").value]);
+			});
 		</script>
 		<link rel="stylesheet" href="https://epicenterprograms.github.io/standards/formatting/foundation.css">
 		<style>
 			.day-box {
 				margin: .5em;
 				padding: .5em;
-				background: white;
 			}
 			.day-box section {
 				margin-top: .5em;
@@ -161,10 +172,21 @@
 				font-weight: bold;
 			}
 
-            @media (prefers-color-scheme: dark) {
+			#location {
+				display: none;
+			}
+			#currentWeather {
+				display: none;
+			}
+			#dailyWeather {
+				display: none;
+			}
+
+			@media (max-width: 1000px) {
 				.day-box {
-					background: black;
+					display: block;
 				}
+			}
 		</style>
 	</head>
 	<body>
@@ -174,11 +196,25 @@
 		<main>
 			<div id="locationSpecification">
 				<section>
-					Press the button to get the weather at your current location and get advice on what to wear.
+					Press a button to get the weather and get advice on what to wear.
 				</section>
 				<button id="getLocationAndWeather">
-					The button
+					Use my location
 				</button>
+				<br>
+				or
+				<br>
+				<input type="number" placeholder="Latitude" id="latitude">
+				<input type="number" placeholder="Longitude" id="longitude">
+				<br>
+				<button id="getWeatherAtLocation">
+					Use these coordinates
+				</button>
+			</div>
+			<br>
+			<div id="location">
+				Showing weather for<br>
+				Latitude: <span id="weatherLatitude"></span>&ensp;Longitude: <span id="weatherLongitude"></span>
 			</div>
 			<br>
 			<div id="currentWeather">
