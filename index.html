@@ -11,7 +11,7 @@
 			var S = Standards.general;
 
 			var cncs = [-Infinity, 1.4, 2.5, 3.7, 4.5, 5.3, 6.2, 7.9, Infinity];  // clothing number cutoffs
-            var appID = "ad62770bf2ffc9" + 5 * 7 + "b5afbf5ce478";
+			var appID = "ad62770bf2ffc9" + 5 * 7 + "b5afbf5ce478";
 
 			function getLocation(method) {
 				return new Promise(function (resolve, reject) {
@@ -59,7 +59,7 @@
 						S.getId("weatherLongitude").textContent = weather.lon;
 
 						S.getId("currentWeatherIcon").src = "http://openweathermap.org/img/wn/" + weather.current.weather[0].icon + "@2x" + ".png";
-                        let cn = getClothingNumber(weather.current.temp, weather.current.wind_speed, weather.current.humidity, weather.current.clouds)
+						let cn = getClothingNumber(weather.current.temp, weather.current.wind_speed, weather.current.humidity, weather.current.clouds)
 						S.getId("clothingNumber").textContent = cn.toFixed(1);
 						S.getId("clothingDescription").textContent = getClothingDescription(cn);
 						let cnci = getCNCI(cn);
@@ -69,15 +69,15 @@
 						S.getId("dailyWeather").innerHTML = "<h2>Daily weather</h2>";
 						S.forEach(weather.daily, showDailyWeather);
 
-                        S.getId("location").style.display = "inline-block";
-                        S.getId("currentWeather").style.display = "inline-block";
-                        S.getId("dailyWeather").style.display = "inline-block";
-                    }
-				})/*.catch(function (error) {
+						S.getId("location").style.display = "inline-block";
+						S.getId("currentWeather").style.display = "inline-block";
+						S.getId("dailyWeather").style.display = "inline-block";
+					}
+				}).catch(function (error) {
 					S.makeDialog("There was an error retrieving the weather.");
 					console.error("The weather couldn't be retrieved.");
 					console.error(error);
-				})*/;
+				});
 			}
 
 			function getClothingNumber(temperature, wind, humidity, clouds) {
@@ -101,10 +101,10 @@
 					return "Shorts";
 				} else {
 					return "Super cool clothing";
-                }
+				}
 			}
 
-            function getCNCI(cn) {  // get clothing number cutoff index
+			function getCNCI(cn) {  // get clothing number cutoff index
 				for (let index = 1; cn > cncs[index - 1]; index++) {
 					if (cn <= cncs[index]) {
 						return index;
@@ -140,10 +140,10 @@
 				description.textContent = getClothingDescription(cn);
 				dayBox.appendChild(description);
 				S.getId("dailyWeather").appendChild(dayBox);
-            }
+			}
 
 			S.listen("getLocationAndWeather", "click", function () {
-                getLocation("currentLocation").then(getWeather).catch(function (error) {
+				getLocation("currentLocation").then(getWeather).catch(function (error) {
 					console.error(error);
 				});
 			});
