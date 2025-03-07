@@ -4,14 +4,14 @@
 		<title>
 			Weather
 		</title>
-		<link rel="icon" href="http://openweathermap.org/img/wn/02d.png">
+		<link rel="icon" href="https://openweathermap.org/img/wn/02d.png">
 		<base target="_blank">
 		<script src="https://epicenterprograms.github.io/standards/behavior/general.js"></script>
 		<script>
 			var S = Standards.general;
 
 			var cncs = [-Infinity, 1.4, 2.5, 3.7, 4.5, 5.3, 6.2, 7.9, Infinity];  // clothing number cutoffs
-			var appID = "ad62770bf2ffc9" + 5 * 7 + "b5afbf5ce478";
+			var appID = "ad6" + 3 * 9 + "70bf2ffc9" + 5 * 7 + "b5afb" + "fb"[0] + "5ce478";
 
 			function getLocation(method) {
 				return new Promise(function (resolve, reject) {
@@ -47,7 +47,7 @@
 			}
 
 			function getWeather(location) {
-				S.getFile("https://api.openweathermap.org/data/2.5/onecall?lat=" + location[0] + "&lon=" + location[1] + "&appid=" + appID + "191a&units=imperial", function (weather) {
+				S.getFile("https://api.openweathermap.org/data/2.5/onecall?lat=" + location[0] + "&lon=" + location[1] + "&appid=" + appID + "191a&units=imperial").then(function (weather) {
 					if (S.getType(weather) == "String") {
 						weather = JSON.parse(weather);
 					}
@@ -58,7 +58,7 @@
 						S.getId("weatherLatitude").textContent = weather.lat;
 						S.getId("weatherLongitude").textContent = weather.lon;
 
-						S.getId("currentWeatherIcon").src = "http://openweathermap.org/img/wn/" + weather.current.weather[0].icon + "@2x" + ".png";
+						S.getId("currentWeatherIcon").src = "https://openweathermap.org/img/wn/" + weather.current.weather[0].icon + "@2x" + ".png";
 						let cn = getClothingNumber(weather.current.temp, weather.current.wind_speed, weather.current.humidity, weather.current.clouds)
 						S.getId("clothingNumber").textContent = cn.toFixed(1);
 						S.getId("clothingDescription").textContent = getClothingDescription(cn);
@@ -120,7 +120,7 @@
 				dayName.textContent = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date(day.dt * 1000).getDay()];
 				dayBox.appendChild(dayName);
 				let dayIcon = document.createElement("img");
-				dayIcon.src = "http://openweathermap.org/img/wn/" + day.weather[0].icon + "@2x.png";
+				dayIcon.src = "https://openweathermap.org/img/wn/" + day.weather[0].icon + "@2x.png";
 				dayBox.appendChild(dayIcon);
 				dayBox.appendChild(document.createElement("br"));
 				let cn = getClothingNumber(day.temp.day, day.wind_speed, day.humidity, day.clouds);
@@ -149,6 +149,24 @@
 			});
 			S.listen("getWeatherAtLocation", "click", function () {
 				getWeather([S.getId("latitude").value, S.getId("longitude").value]);
+			});
+			S.listen("getWeatherFromConditions", "click", function () {
+				let temp = S.getId("providedTemp").value;
+				let wind = S.getId("providedWind").value;
+				let humidity = S.getId("providedHumidity").value;
+				let clouds = S.getId("providedClouds").value;
+				if ([temp, wind, humidity, clouds].includes("")) {
+					S.makeDialog("At least one condition wasn't provided.");
+				} else {
+					S.getId("currentWeatherIcon").src = "https://openweathermap.org/img/wn/0" + clouds + "d@2x" + ".png";
+					let cn = getClothingNumber(temp, wind, humidity, clouds);
+					S.getId("clothingNumber").textContent = cn.toFixed(1);
+					S.getId("clothingDescription").textContent = getClothingDescription(cn);
+					let cnci = getCNCI(cn);
+					S.getId("lowCutoff").textContent = cncs[cnci - 1];
+					S.getId("highCutoff").textContent = cncs[cnci];
+					S.getId("currentWeather").style.display = "inline-block";
+				}
 			});
 		</script>
 		<link rel="stylesheet" href="https://epicenterprograms.github.io/standards/formatting/foundation.css">
@@ -209,6 +227,23 @@
 				<br>
 				<button id="getWeatherAtLocation">
 					Use these coordinates
+				</button>
+				<br>
+				or
+				<br>
+				<input type="number" id="providedTemp" placeholder="Degrees Fahrenheit">
+				<input type="number" id="providedWind" placeholder="Wind (mph)">
+				<br>
+				<input type="number" id="providedHumidity" placeholder="Percent humidity">
+				<select id="providedClouds">
+					<option value="" selected>Cloud cover</option>
+					<option value="1">Clear</option>
+					<option value="2">Some clouds</option>
+					<option value="3">Fully cloudy</option>
+				</select>
+				<br>
+				<button id="getWeatherFromConditions">
+					Use these conditions
 				</button>
 			</div>
 			<br>
