@@ -97,6 +97,7 @@
 						S.makeDialog("The developer's weather request quota has been reached.");
 					} else {
 						S.getId("weatherCity").textContent = weather.name;
+						S.getId("currentWeatherBox").innerHTML = "";
 						fillWeatherBox(S.getId("currentWeatherBox"), {
 							icon: weather.weather[0].icon,
 							temp: weather.main.temp,
@@ -125,7 +126,7 @@
 						S.makeDialog("The developer's weather request quota has been reached.");
 					} else {
 						// resets any existing weather
-						S.getId("dailyWeather").innerHTML = "<h2>Daily weather</h2>";
+						S.getId("dailyWeather").innerHTML = "<h2>Looking ahead</h2>";
 						S.getId("todayDay").innerHTML = "";
 						S.getId("todayNight").innerHTML = "";
 
@@ -166,8 +167,12 @@
 						fillWeatherBox(S.getId("todayNight"), nightWeather);
 						S.getId("remainingWeather").style.display = "inline-block";
 
+						// decide whether the last day has enough data for an accurate forecast
+						if (forecastDays[forecastDays.length - 1].length < 7) {  // if the last day isn't complete enough
+							forecastDays.pop();  // remove the last day
+						}
 						// average the data from the days ahead and display it
-						S.forEach(forecastDays.slice(1, -1), function (day) {  // for each full day after today
+						S.forEach(forecastDays.slice(1), function (day) {  // for each full day after today
 							// let samples = day.slice(2, 7);  // 5 samples from 6:00am to 6:00pm
 							let samples = day.slice(3, 7);  // 4 samples from 9:00am to 6:00pm
 							// let samples = [day[3], day[4], day[6]]  // 3 samples from 9:00am, 12:00pm, and 6:00pm
@@ -374,7 +379,7 @@
 			<br>
 			<div id="dailyWeather">
 				<h2>
-					Weather for the week
+					Looking ahead
 				</h2>
 			</div>
 		</main>
