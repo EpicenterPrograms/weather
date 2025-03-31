@@ -57,6 +57,18 @@
 				average.clouds = samples.reduce((sum, w) => sum + w.clouds.all, 0) / samples.length;
 				return average;
 			}
+			function heavyMiddleAverage(samples) {
+				let average = {};
+				let middleSample = samples[Math.floor(samples.length / 2)];
+				samples = [...samples, ...samples.slice(1, -1)];
+				average.icon = middleSample.weather[0].icon;
+				average.dt = samples.reduce((sum, w) => sum + w.dt, 0) / samples.length;
+				average.temp = samples.reduce((sum, w) => sum + w.main.temp, 0) / samples.length;
+				average.wind = samples.reduce((sum, w) => sum + w.wind.speed, 0) / samples.length;
+				average.humidity = samples.reduce((sum, w) => sum + w.main.humidity, 0) / samples.length;
+				average.clouds = samples.reduce((sum, w) => sum + w.clouds.all, 0) / samples.length;
+				return average;
+			}
 
 			function fillWeatherBox(box, weather) {
 				let container = document.createElement("div");
@@ -149,7 +161,7 @@
 								const t = new Date(w.dt * 1000);
 								return t.getHours() >= 8 && t.getHours() <= 19;  // keep if the time is between 8:00am and 7:00pm
 							});
-							let dayWeather = averageSamples(daySamples);
+							let dayWeather = heavyMiddleAverage(daySamples);
 							fillWeatherBox(S.getId("todayDay"), dayWeather);
 							S.getId("todayDayBox").style.display = "inline-block";
 						} else {  // hide the daytime weather because it's too late in the day
@@ -163,7 +175,7 @@
 								return t.getHours() <= 5; // keep if from tomorrow at or before 5
 							}
 						});
-						let nightWeather = averageSamples(nightSamples);
+						let nightWeather = heavyMiddleAverage(nightSamples);
 						fillWeatherBox(S.getId("todayNight"), nightWeather);
 						S.getId("remainingWeather").style.display = "inline-block";
 
@@ -176,7 +188,7 @@
 							// let samples = day.slice(2, 7);  // 5 samples from 6:00am to 6:00pm
 							let samples = day.slice(3, 7);  // 4 samples from 9:00am to 6:00pm
 							// let samples = [day[3], day[4], day[6]]  // 3 samples from 9:00am, 12:00pm, and 6:00pm
-							showDailyWeather(averageSamples(samples));
+							showDailyWeather(heavyMiddleAverage(samples));
 						});
 						S.getId("dailyWeather").style.display = "inline-block";
 					}
@@ -243,20 +255,21 @@
 				getWeather([S.getId("latitude").value, S.getId("longitude").value]);
 			});
 			S.listen("getWeatherFromConditions", "click", function () {
-				let temp = S.getId("providedTemp").value;
-				let wind = S.getId("providedWind").value;
-				let humidity = S.getId("providedHumidity").value;
-				let clouds = S.getId("providedClouds").value;
+				let temp = Number(S.getId("providedTemp").value);
+				let wind = Number(S.getId("providedWind").value);
+				let humidity = Number(S.getId("providedHumidity").value);
+				let clouds = Number(S.getId("providedClouds").value);
 				if ([temp, wind, humidity, clouds].includes("")) {
 					S.makeDialog("At least one condition wasn't provided.");
 				} else {
-					S.getId("currentWeatherIcon").src = "https://openweathermap.org/img/wn/0" + clouds + "d@2x" + ".png";
-					let cn = getClothingNumber(temp, wind, humidity, (Number(clouds) - 1) * 50);
-					S.getId("clothingNumber").textContent = cn.toFixed(1);
-					S.getId("clothingDescription").textContent = getClothingDescription(cn);
-					let cnci = getCNCI(cn);
-					S.getId("lowCutoff").textContent = cncs[cnci - 1];
-					S.getId("highCutoff").textContent = cncs[cnci];
+					S.getId("currentWeatherBox").innerHTML = "";
+					fillWeatherBox(S.getId("currentWeatherBox"), {
+						icon: "0" + clouds + "d",
+						temp: temp,
+						wind: wind,
+						humidity: humidity,
+						clouds: (clouds - 1) * 50
+					});
 					S.getId("currentWeather").style.display = "inline-block";
 				}
 			});
