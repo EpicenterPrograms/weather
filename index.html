@@ -71,28 +71,48 @@
 			}
 
 			function fillWeatherBox(box, weather) {
-				let container = document.createElement("div");
-				let dayIcon = document.createElement("img");
-				dayIcon.src = "https://openweathermap.org/img/wn/" + weather.icon + "@2x.png";
-				container.appendChild(dayIcon);
-				container.appendChild(document.createElement("br"));
-				let cn = getClothingNumber(weather.temp, weather.wind, weather.humidity, weather.clouds);
-				let lowCutoff = document.createElement("span");
-				lowCutoff.className = "day-cutoff";
-				lowCutoff.textContent = cncs[getCNCI(cn) - 1];
-				container.appendChild(lowCutoff);
-				let number = document.createElement("span");
-				number.className = "clothing-number";
-				number.textContent = cn.toFixed(1);
-				container.appendChild(number);
-				let highCutoff = document.createElement("span");
-				highCutoff.className = "day-cutoff";
-				highCutoff.textContent = cncs[getCNCI(cn)];
-				container.appendChild(highCutoff);
-				let description = document.createElement("section");
-				description.textContent = getClothingDescription(cn);
-				container.appendChild(description);
-				box.appendChild(container);
+				if (S.getName("displayType", true).id == "showClothingNumbers") {
+					let container = document.createElement("div");
+					let dayIcon = document.createElement("img");
+					dayIcon.src = "https://openweathermap.org/img/wn/" + weather.icon + "@2x.png";
+					container.appendChild(dayIcon);
+					container.appendChild(document.createElement("br"));
+					let cn = getClothingNumber(weather.temp, weather.wind, weather.humidity, weather.clouds);
+					let lowCutoff = document.createElement("span");
+					lowCutoff.className = "day-cutoff";
+					lowCutoff.textContent = cncs[getCNCI(cn) - 1];
+					container.appendChild(lowCutoff);
+					let number = document.createElement("span");
+					number.className = "clothing-number";
+					number.textContent = cn.toFixed(1);
+					container.appendChild(number);
+					let highCutoff = document.createElement("span");
+					highCutoff.className = "day-cutoff";
+					highCutoff.textContent = cncs[getCNCI(cn)];
+					container.appendChild(highCutoff);
+					let description = document.createElement("section");
+					description.textContent = getClothingDescription(cn);
+					container.appendChild(description);
+					box.appendChild(container);
+				} else {
+					let container = document.createElement("div");
+					let dayIcon = document.createElement("img");
+					dayIcon.src = "https://openweathermap.org/img/wn/" + weather.icon + "@2x.png";
+					container.appendChild(dayIcon);
+					container.appendChild(document.createElement("br"));
+					let weatherList = document.createElement("table");
+					weatherList.className = "labeled-list";
+					let tempRow = weatherList.insertRow();
+					tempRow.innerHTML = "<th>Temperature</th><td>" + weather.temp.toFixed(1) + "&deg;F</td>";
+					let windRow = weatherList.insertRow();
+					windRow.innerHTML = "<th>Wind</th><td>" + weather.wind.toFixed(1) + " mph</td>";
+					let humidRow = weatherList.insertRow();
+					humidRow.innerHTML = "<th>Humidity</th><td>" + weather.humidity.toFixed(1) + "%</td>";
+					let cloudRow = weatherList.insertRow();
+					cloudRow.innerHTML = "<th>Cloud cover</th><td>" + weather.clouds.toFixed(1) + "%</td>";
+					container.appendChild(weatherList);
+					box.appendChild(container);
+				}
 			}
 
 			function getWeather(location) {
@@ -188,7 +208,9 @@
 							// let samples = day.slice(2, 7);  // 5 samples from 6:00am to 6:00pm
 							let samples = day.slice(3, 7);  // 4 samples from 9:00am to 6:00pm
 							// let samples = [day[3], day[4], day[6]]  // 3 samples from 9:00am, 12:00pm, and 6:00pm
-							showDailyWeather(heavyMiddleAverage(samples));
+							// showDailyWeather(heavyMiddleAverage(samples));
+							showDailyWeather(averageSamples([day[4], day[5], day[5], day[5], day[6]]));
+							/// Note: All times are shifted ahead by an hour during Daylight Saving Time.
 						});
 						S.getId("dailyWeather").style.display = "inline-block";
 					}
@@ -356,6 +378,16 @@
 				<button id="getWeatherFromConditions">
 					Use these conditions
 				</button>
+				<br>
+				<label for="showClothingNumbers">
+					Show clothing numbers
+				</label>
+				<input type="radio" name="displayType" id="showClothingNumbers" checked>
+				&emsp;
+				<label for="showProcessedWeather">
+					Show processed weather
+				</label>
+				<input type="radio" name="displayType" id="showProcessedWeather">
 			</div>
 			<br>
 			<br>
