@@ -209,7 +209,7 @@
 							let samples = day.slice(3, 7);  // 4 samples from 9:00am to 6:00pm
 							// let samples = [day[3], day[4], day[6]]  // 3 samples from 9:00am, 12:00pm, and 6:00pm
 							// showDailyWeather(heavyMiddleAverage(samples));
-							showDailyWeather(averageSamples([day[4], day[5], day[5], day[5], day[6]]));
+							showDailyWeather(averageSamples([day[4], day[5], day[5], day[5], day[5], day[6]]));
 							/// Note: All times are shifted ahead by an hour during Daylight Saving Time.
 						});
 						S.getId("dailyWeather").style.display = "inline-block";
